@@ -1,57 +1,161 @@
 #include <IRremote.h>             // include the IRremote library
 #include <Wire.h>                 // code library for I2C intercase to motor shield ( via SDA / SDL pins )
 #include <Adafruit_MotorShield.h> // code library for the motor shield
-//
-//------------------------------------------------------------------------------------------------------------------------
-//
-//  set up motorshield for brushed DC & stepper motors
-//
-Adafruit_MotorShield AFMS;     // designate motors for motor shield library code 
-Adafruit_DCMotor *myMotorL=AFMS.getMotor(1);          // designate motors for motor shield library code
-Adafruit_DCMotor *myMotorR=AFMS.getMotor(2);          // designate motors for motor shield library code
-Adafruit_StepperMotor *myStepper = AFMS.getStepper(2048, 2);
-//
-//------------------------------------------------------------------------------------------------------------------------
-//
+
+// Create the motor shield object with the default I2C address
+Adafruit_MotorShield AFMS = Adafruit_MotorShield();
+// Select which 'port' M1, M2, M3 or M4. In this case, M1
+Adafruit_DCMotor *brMotor = AFMS.getMotor(1);
+Adafruit_DCMotor *blMotor = AFMS.getMotor(2);
+Adafruit_DCMotor *frMotor = AFMS.getMotor(3);
+Adafruit_DCMotor *flMotor = AFMS.getMotor(4);
+
 //  definitions for IR remote control
-//
 #define RECV_PIN 11            //  define the DIO pin used for the receiver
 decode_results results;        //  structure containing received data
 IRrecv irrecv(RECV_PIN);     // Create an instance of the IRrecv library 
 
 
 void setup() {
+
+Serial.begin(9600); // set up Serial library at 9600 bps
+
 // start IR receiver monitoring
   irrecv.enableIRIn();      // Start receiving codes
 }
 
- 
+if (!AFMS.begin()) { // create with the default frequency 1.6KHz
+  // if (!AFMS.begin(1000)) { // OR with a different frequency, say 1KHz
+  Serial.println("Could not find Motor Shield. Check wiring.");
+  while (1);
+}
+
+Serial.println("Motor Shield found.");
+
 
 void loop() {
-//  control of motion start by IR remote key press
-//
+  uint8_t i;
+  i = 50
+
+  //  control of motion start by IR remote key press
   if (irrecv.decode(&results))        // Has a new code been received? */
     {   
-        if (GetIRIndex(results.value) =="UP")
-        {
-          status_flag = 1;
+        button_pressed = GetIRIndex(results.value);
+        
+        switch(button_pressed) {
+
+        case "UP" {
+          up()
         }
-        else
-        {
-          status_flag = 0;
+
+        case "DN" {
+          down()
         }
-      Serial.println(status_flag);     // use serial monitor to debug if neccessary by inspecting status
+
+        case "L" {
+          left()
+        }
+
+        case "R" {
+          right()
+        }
+
       Serial.println(GetIRIndex(results.value));     
       irrecv.resume();                 // Start receiving codes again    
     } 
-  
-  
-  
-  
+
+
+  // function to move up tree 
+  void up() {
+    flMotor->run(FORWARD);
+    flMotor->setSpeed(i);
     
+    brMotor->run(FORWARD);
+    brMotor->setSpeed(i);
+    
+    frMotor->run(BACKWARD);
+    frMotor->setSpeed(i);
+    
+    blMotor->run(BACKWARD);
+    blMotor->setSpeed(i);
+
+    delay(3000)
+
+    flMotor->run(RELEASE);
+    brMotor->run(RELEASE);
+    frMotor->run(RELEASE);
+    blMotor->run(RELEASE);
+  }
+  
+  // function to move down tree
+  void down() {
+    flMotor->run(BACKWARD);
+    flMotor->setSpeed(i);
+    
+    brMotor->run(BACKWARD);
+    brMotor->setSpeed(i);
+    
+    frMotor->run(FORWARD);
+    frMotor->setSpeed(i);
+    
+    blMotor->run(FORWARD);
+    blMotor->setSpeed(i);
+
+    delay(3000)
+
+    flMotor->run(RELEASE);
+    brMotor->run(RELEASE);
+    frMotor->run(RELEASE);
+    blMotor->run(RELEASE);
+    
+  }
+  
+  // function to move anticlockwise 
+  void right() {
+    flMotor->run(FORWARD);
+    flMotor->setSpeed(i);
+    
+    brMotor->run(FORWARD);
+    brMotor->setSpeed(i);
+      
+    frMotor->run(FORWARD);
+    frMotor->setSpeed(i);
+      
+    blMotor->run(FORWARD);
+    blMotor->setSpeed(i);
+
+    delay(3000)
+
+    flMotor->run(RELEASE);
+    brMotor->run(RELEASE);
+    frMotor->run(RELEASE);
+    blMotor->run(RELEASE);
+  }
+  
+  // function to move clockwise
+  void left() {
+    flMotor->run(BACKWARD);
+    flMotor->setSpeed(i);
+      
+    brMotor->run(BACKWARD);
+    brMotor->setSpeed(i);
+      
+    frMotor->run(BACKWARD);
+    frMotor->setSpeed(i);
+      
+    blMotor->run(BACKWARD);
+    blMotor->setSpeed(i);
+
+    delay(3000)
+
+    flMotor->run(RELEASE);
+    brMotor->run(RELEASE);
+    frMotor->run(RELEASE);
+    blMotor->run(RELEASE);
+  }
+
   //  define function for intepreting IR remote codes
   //  function returns the button name relating to the received code 
-  //
   String GetIRIndex(unsigned long code)
   {
     char CodeName[3];                     // Character array used to hold the received button name 
@@ -181,6 +285,6 @@ void loop() {
   }
 
 
-      
+
 
 }
